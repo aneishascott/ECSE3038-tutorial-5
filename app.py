@@ -30,3 +30,13 @@ def get_device(name: str):
     if device is None:
         raise HTTPException(status_code = 404, detail="Device with name " +name+ " does not exist")
     return device
+
+@app.post("/devices", status_code = 201)
+def create_device(device: Device):
+    for existing_device in devices.find({}, {"_id": 0}):
+        if existing_device["name"] == device.name:
+            raise HTTPException(status_code = 409, detail="Device with name " +device.name+ " already exists")
+    new_device = device.model_dump()
+    devices.insert_one(new_device)
+    new_device.pop("_id")
+    return new_device
