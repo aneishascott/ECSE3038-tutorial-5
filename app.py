@@ -55,3 +55,11 @@ def update_device(name: str, device: Device):
     devices.update_one({"name": name}, {"$set": updated_device})
     updated_device.pop("_id", None)
     return updated_device
+
+@app.delete("/devices/{name}")
+def delete_device(name: str):
+    for existing_device in devices.find({}, {"_id": 0}):
+        if existing_device["name"] == name:
+            devices.delete_one({"name": name})
+            return  {"message": "Device with name "+name+" has been deleted"}
+    raise HTTPException(status_code = 404, detail="Device with name " +name+ " does not exist") 
