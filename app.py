@@ -1,7 +1,9 @@
+from email import message
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pymongo import MongoClient
 
@@ -40,3 +42,16 @@ def create_device(device: Device):
     devices.insert_one(new_device)
     new_device.pop("_id")
     return new_device
+
+@app.put("/devices/{name}")
+def update_device(name: str, device: Device):
+    existing_device = devices.find_one({"name": name})
+    if existing_device is None:
+        new_device = device.model_dump()
+        devices.insert_one(new_device)
+        new_device.pop("_id", None)
+        return JSONResponse(status_code=201, content=new_device)
+    updated_device = device.model_dump()
+    devices.update_one({"name": name}, {"$set": updated_device})
+    updated_device.pop("_id", None)
+    return updated_device
